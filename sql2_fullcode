@@ -104,8 +104,7 @@ ORDER BY e.emp_no ASC
 	-- Verify table
 SELECT * FROM retirement_titles
 
--- Create unique_titles table by using previous table, drop from_date and to_date, 
--- filter by the last title of employees
+-- Create unique_titles table by using previous table, drop from_date and to_date, filter by the last title of employees
 SELECT DISTINCT ON (r.emp_no) r.emp_no, 
 		r.first_name, 
 		r.last_name,
@@ -117,9 +116,8 @@ ORDER BY r.emp_no ASC, r.to_date DESC;
 	-- Verify table
 SELECT * FROM unique_titles
 
--- Export unique_titles as csv
--- Retrieve number of employees by most recent job title who are about to retire
--- and create a retiring_titles table
+-- Export unique_titles as csv and retrieve number of employees by most recent job title who are about to retire
+-- Create a retiring_titles table
 SELECT COUNT(u.title), u.title
 INTO retiring_titles
 FROM unique_titles AS u
@@ -134,8 +132,7 @@ SELECT * FROM employees
 SELECT * FROM dept_emp
 SELECT * FROM titles
 
--- Create mentorship_eligibilty table with employees
--- who are eligible to participate in a mentorship program.
+-- Create mentorship_eligibilty table with employees who are eligible to participate in a mentorship program.
 SELECT DISTINCT ON(e.emp_no) e.emp_no,
 		e.first_name,
 		e.last_name,
@@ -143,7 +140,6 @@ SELECT DISTINCT ON(e.emp_no) e.emp_no,
 		d.from_date,
 		d.to_date,
 		t.title
--- INTO mentorship_eligibilty
 FROM employees AS e
 JOIN dept_emp AS d
 	ON e.emp_no = d.emp_no
