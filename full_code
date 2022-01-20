@@ -1,93 +1,3 @@
--- Table: brands
-------------------------------------------------
--- Create Table brands and import brands.json
-CREATE TABLE brands (values json);
-GRANT SELECT ON brands TO PUBLIC;
-COPY brands from 'C:\Users\joszp\Documents\Fetch\brands.json';
-
--- Error found on line 750. Unexpected "" Inside "name" key and its value pair.
--- General Mills \"Big G\" Cereal"
-DROP TABLE brands;
-
--- Create Table brands in order to store brands.json as text type
-CREATE TABLE brands (values text);
-GRANT SELECT ON brands TO PUBLIC;
-COPY brands from 'C:\Users\joszp\Documents\Fetch\brands.json';
-
--- Verify table
-SELECT * FROM brands;
-
--- Inspect row raising error
-SELECT * FROM brands WHERE values LIKE '%Big G%';
-
--- Update brands table and replace improper "" using LIKE and Wildcards
-UPDATE brands SET values = '{"_id":{"$oid":"5dc07e2aa60b873d6b0666d1"},"name":"General Mills Big G Cereal","cpg":{"$ref":"Cogs","$id":{"$oid":"53e10d6368abd3c7065097cc"}},"barcode":"511111006305","brandCode":"GENERAL MILLS CEREAL"}' 
-WHERE values LIKE '%Big G%';
-
--- Verify row raising error is corrected
-SELECT * FROM brands WHERE values LIKE '%Big G%';
-
--- Convert brands type to JSON and manipulate as JSON
-ALTER TABLE brands
-ALTER COLUMN values type json USING "values"::json;
-
--- Verify table
-SELECT * FROM brands;
-
-	-- Inspect JSON file and extract values to a new table
--- Extract all keys
-SELECT DISTINCT(json_object_keys(values)) FROM brands;		-- 8
-
--- Create table to store JSON parsed values
-CREATE TABLE brands_parsed (
-	index SERIAL,
-	id VARCHAR,
-	barcode BIGINT,
-	category VARCHAR,
-	category_code VARCHAR, 
-	cpg VARCHAR, 
-	name VARCHAR,
-	brand_code VARCHAR,
-	top_brand BOOLEAN
-);
-
--- Verify Table
-SELECT * FROM brands_parsed;
-DROP TABLE brands_parsed;
-
--- Identify the path for each feature
-SELECT values FROM brands;
-SELECT values->'_id' FROM brands;
-SELECT values::json#>>'{_id,$oid}' FROM brands; --id
-SELECT values->'barcode' FROM brands; 
-SELECT values->>'barcode' FROM brands;
-SELECT values::json#>'{barcode}' FROM brands;   -- barcode
-SELECT values->'category' FROM brands;	-- category
-SELECT values->'categoryCode' FROM brands;	 
-SELECT values::json#>'{cpg,$id,$oid}' FROM brands; -- categoryCode
-SELECT values->'name' FROM brands; -- name
-SELECT values->'brandCode' FROM brands; -- brandCode
-SELECT values->'topBrand' FROM brands; -- topBrand
-
--- Extract data from brands.values json into brands_parsed
-INSERT INTO brands_parsed(id, barcode, category, category_code, cpg, name, brand_code, top_brand)
-SELECT values::json#>>'{_id,$oid}', CAST(values->>'barcode' AS BIGINT), values->>'category', values->>'categoryCode', 
-	values::json#>>'{cpg,$id,$oid}', values->>'name', values->>'brandCode', CAST(values->>'topBrand' AS BOOLEAN)
-FROM brands;
-
-
--- Clean text from name column
-UPDATE brands_parsed SET name = TRIM(LEADING 'test brand @' FROM name)
-WHERE name LIKE '%test brand @%';
-
--- Clean text from brand_code column
-UPDATE brands_parsed SET brand_code = TRIM(LEADING 'TEST BRANDCODE @' FROM brand_code)
-WHERE brand_code LIKE '%TEST BRANDCODE @%';
-
--- Verify Table
-SELECT * FROM brands_parsed ORDER BY index;
-
-
 ------------------------------------------------
 -- Table: receipts
 ------------------------------------------------
@@ -235,6 +145,97 @@ ALTER COLUMN create_date TYPE timestamp USING to_timestamp(cast(receipts_parsed.
 -- Verify Table
 SELECT * FROM receipts_parsed;
 
+
+
+------------------------------------------------
+-- Table: brands
+------------------------------------------------
+-- Create Table brands and import brands.json
+CREATE TABLE brands (values json);
+GRANT SELECT ON brands TO PUBLIC;
+COPY brands from 'C:\Users\joszp\Documents\Fetch\brands.json';
+
+-- Error found on line 750. Unexpected "" Inside "name" key and its value pair.
+-- General Mills \"Big G\" Cereal"
+DROP TABLE brands;
+
+-- Create Table brands in order to store brands.json as text type
+CREATE TABLE brands (values text);
+GRANT SELECT ON brands TO PUBLIC;
+COPY brands from 'C:\Users\joszp\Documents\Fetch\brands.json';
+
+-- Verify table
+SELECT * FROM brands;
+
+-- Inspect row raising error
+SELECT * FROM brands WHERE values LIKE '%Big G%';
+
+-- Update brands table and replace improper "" using LIKE and Wildcards
+UPDATE brands SET values = '{"_id":{"$oid":"5dc07e2aa60b873d6b0666d1"},"name":"General Mills Big G Cereal","cpg":{"$ref":"Cogs","$id":{"$oid":"53e10d6368abd3c7065097cc"}},"barcode":"511111006305","brandCode":"GENERAL MILLS CEREAL"}' 
+WHERE values LIKE '%Big G%';
+
+-- Verify row raising error is corrected
+SELECT * FROM brands WHERE values LIKE '%Big G%';
+
+-- Convert brands type to JSON and manipulate as JSON
+ALTER TABLE brands
+ALTER COLUMN values type json USING "values"::json;
+
+-- Verify table
+SELECT * FROM brands;
+
+	-- Inspect JSON file and extract values to a new table
+-- Extract all keys
+SELECT DISTINCT(json_object_keys(values)) FROM brands;		-- 8
+
+-- Create table to store JSON parsed values
+CREATE TABLE brands_parsed (
+	index SERIAL,
+	id VARCHAR,
+	barcode BIGINT,
+	category VARCHAR,
+	category_code VARCHAR, 
+	cpg VARCHAR, 
+	name VARCHAR,
+	brand_code VARCHAR,
+	top_brand BOOLEAN
+);
+
+-- Verify Table
+SELECT * FROM brands_parsed;
+DROP TABLE brands_parsed;
+
+-- Identify the path for each feature
+SELECT values FROM brands;
+SELECT values->'_id' FROM brands;
+SELECT values::json#>>'{_id,$oid}' FROM brands; --id
+SELECT values->'barcode' FROM brands; 
+SELECT values->>'barcode' FROM brands;
+SELECT values::json#>'{barcode}' FROM brands;   -- barcode
+SELECT values->'category' FROM brands;	-- category
+SELECT values->'categoryCode' FROM brands;	 
+SELECT values::json#>'{cpg,$id,$oid}' FROM brands; -- categoryCode
+SELECT values->'name' FROM brands; -- name
+SELECT values->'brandCode' FROM brands; -- brandCode
+SELECT values->'topBrand' FROM brands; -- topBrand
+
+-- Extract data from brands.values json into brands_parsed
+INSERT INTO brands_parsed(id, barcode, category, category_code, cpg, name, brand_code, top_brand)
+SELECT values::json#>>'{_id,$oid}', CAST(values->>'barcode' AS BIGINT), values->>'category', values->>'categoryCode', 
+	values::json#>>'{cpg,$id,$oid}', values->>'name', values->>'brandCode', CAST(values->>'topBrand' AS BOOLEAN)
+FROM brands;
+
+
+-- Clean text from name column
+UPDATE brands_parsed SET name = TRIM(LEADING 'test brand @' FROM name)
+WHERE name LIKE '%test brand @%';
+
+-- Clean text from brand_code column
+UPDATE brands_parsed SET brand_code = TRIM(LEADING 'TEST BRANDCODE @' FROM brand_code)
+WHERE brand_code LIKE '%TEST BRANDCODE @%';
+
+-- Verify Table
+SELECT * FROM brands_parsed ORDER BY index;
 
 
 
